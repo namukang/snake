@@ -18,10 +18,11 @@ var RIGHT = 1;
 var DOWN = 2;
 var LEFT = 3;
 
-window.onload = function() {
+// to call from index.html
+exports.init = function() {
   gGameController = new GameController();
   gGameController.initGame();
-}
+};
 
 function Point(x, y) {
   this.x = x;
@@ -77,7 +78,6 @@ function Snake() {
       }
       this.draw();
       // snake can now change directions
-      document.addEventListener('mousemove', gTouchManager.touchmove);
       document.addEventListener('touchmove', gTouchManager.touchmove);
     }
   }
@@ -153,8 +153,6 @@ function GameController() {
     canvasElement.height = kPixelHeight;
 
     gTouchManager = new TouchManager();
-    document.addEventListener('mousedown', gTouchManager.touchstart);
-    document.addEventListener('mousemove', gTouchManager.touchmove);
     document.addEventListener('touchstart', gTouchManager.touchstart);
     document.addEventListener('touchmove', gTouchManager.touchmove);
 
@@ -297,7 +295,6 @@ function DisplayManager() {
 function TouchManager() {
   this.oldPoint = null;
   this.touchstart = function(e) {
-    console.log("touchstart");
     gTouchManager.oldPoint = gTouchManager.getCursorPosition(e);
 
     // listen for replay if game is over
@@ -318,15 +315,9 @@ function TouchManager() {
     }
   }
   this.touchmove = function(e) {
-    console.log("touchmove");
     // snake must move at least once before changing direction again
-    // document.removeEventListener('mousemove', gTouchManager.touchmove);
-    // document.removeEventListener('touchmove', gTouchManager.touchmove);
+    document.removeEventListener('touchmove', gTouchManager.touchmove);
 
-    if (gTouchManager.oldPoint === null) {
-      gTouchManager.oldPoint = gTouchManager.getCursorPosition(e);
-      return;
-    }
     var newPoint = gTouchManager.getCursorPosition(e);
     if (newPoint === null) {
       return;
@@ -376,13 +367,12 @@ function TouchManager() {
     return gSnake.direction;
   }
   this.getCursorPosition = function(e) {
-    // if (e.touches === undefined) {
-    //   return null;
-    // }
-    // var x = e.touches[0].pageX;
-    // var y = e.touches[0].pageY;
-    // return new Point(x, y);
-    return new Point(e.x, e.y);
+    if (e.touches === undefined) {
+      return null;
+    }
+    var x = e.touches[0].pageX;
+    var y = e.touches[0].pageY;
+    return new Point(x, y);
   }
 }
 
