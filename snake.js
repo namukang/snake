@@ -18,8 +18,7 @@ var RIGHT = 1;
 var DOWN = 2;
 var LEFT = 3;
 
-// to call from index.html
-exports.init = function() {
+window.onload = function() {
   gGameController = new GameController();
   gGameController.initGame();
 };
