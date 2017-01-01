@@ -1,5 +1,5 @@
-var kPixelWidth = 480;
-var kPixelHeight = 760;
+var kPixelWidth;
+var kPixelHeight;
 var kScoreHeight = 40;
 var kBoxSide = 20;
 var kLoopInterval = 125;
@@ -19,6 +19,14 @@ var DOWN = 2;
 var LEFT = 3;
 
 window.onload = function() {
+  // get viewport size
+  kPixelWidth = document.documentElement.clientWidth;
+  kPixelHeight = document.documentElement.clientHeight;
+
+  // round to nearest box border
+  kPixelWidth = Math.floor(kPixelWidth / kBoxSide) * kBoxSide;
+  kPixelHeight = Math.floor(kPixelHeight / kBoxSide) * kBoxSide;
+
   gGameController = new GameController();
   gGameController.initGame();
 };
@@ -266,15 +274,15 @@ function DisplayManager() {
     gDrawingContext.beginPath();
 
     // vertical lines
-    for (var x = 0; x < kPixelWidth; x += kBoxSide) {
-      gDrawingContext.moveTo(0.5 + x, kScoreHeight);
-      gDrawingContext.lineTo(0.5 + x, kPixelHeight);
+    for (var x = 0; x <= kPixelWidth; x += kBoxSide) {
+      gDrawingContext.moveTo(x, kScoreHeight);
+      gDrawingContext.lineTo(x, kPixelHeight);
     }
 
     // horizontal lines
-    for (var y = kScoreHeight; y < kPixelHeight; y += kBoxSide) {
-      gDrawingContext.moveTo(0, 0.5 + y);
-      gDrawingContext.lineTo(kPixelWidth, 0.5 + y);
+    for (var y = kScoreHeight; y <= kPixelHeight; y += kBoxSide) {
+      gDrawingContext.moveTo(0, y);
+      gDrawingContext.lineTo(kPixelWidth, y);
     }
 
     // draw board
@@ -282,12 +290,12 @@ function DisplayManager() {
     gDrawingContext.stroke();
   }
   this.drawBox = function(pt) {
-    gDrawingContext.fillRect(0.5 + pt.x, 0.5 + pt.y, kBoxSide, kBoxSide);
+    gDrawingContext.fillRect(pt.x, pt.y, kBoxSide, kBoxSide);
   }
   this.eraseBox = function(pt) {
     gDrawingContext.strokeStyle = kLineColor;
-    gDrawingContext.clearRect(0.5 + pt.x, 0.5 + pt.y, kBoxSide, kBoxSide);
-    gDrawingContext.strokeRect(0.5 + pt.x, 0.5 + pt.y, kBoxSide, kBoxSide);
+    gDrawingContext.clearRect(pt.x, pt.y, kBoxSide, kBoxSide);
+    gDrawingContext.strokeRect(pt.x, pt.y, kBoxSide, kBoxSide);
   }
 }
 
@@ -374,5 +382,3 @@ function TouchManager() {
     return new Point(x, y);
   }
 }
-
-
