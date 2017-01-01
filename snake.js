@@ -5,6 +5,7 @@ var kBoxSide = 20;
 var kLoopInterval = 125;
 var kLineColor = "#ccc";
 var kIncrement = 3;
+var kSwipeThreshold = 5;
 
 var gDrawingContext;
 var gGameController;
@@ -335,9 +336,9 @@ function TouchManager() {
     var xAbsDiff = Math.abs(xDiff);
     var yAbsDiff = Math.abs(yDiff);
 
+    // difference on one axis should be greater than on other axis
     var directionUnclear = Math.abs(xAbsDiff - yAbsDiff) < 10;
-    var threshold = 20;
-    var swipeTooSmall = xAbsDiff < threshold && yAbsDiff < threshold;
+    var swipeTooSmall = xAbsDiff < kSwipeThreshold && yAbsDiff < kSwipeThreshold;
 
     if (directionUnclear || swipeTooSmall) {
       return;
