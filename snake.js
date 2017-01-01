@@ -336,11 +336,8 @@ function TouchManager() {
     var xAbsDiff = Math.abs(xDiff);
     var yAbsDiff = Math.abs(yDiff);
 
-    // difference on one axis should be greater than on other axis
-    var directionUnclear = Math.abs(xAbsDiff - yAbsDiff) < 10;
     var swipeTooSmall = xAbsDiff < kSwipeThreshold && yAbsDiff < kSwipeThreshold;
-
-    if (directionUnclear || swipeTooSmall) {
+    if (swipeTooSmall) {
       return;
     }
 
