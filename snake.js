@@ -211,7 +211,7 @@ function GameController() {
     gDrawingContext.textBaseline = "top";
     gDrawingContext.textAlign = "center";
 
-    gDrawingContext.font = "bold 20px sans-serif";
+    gDrawingContext.font = "bold 18px sans-serif";
     var scoreText = "Final Score: ";
     if (topScoreChanged) {
       gDrawingContext.fillStyle = "red";
@@ -222,7 +222,7 @@ function GameController() {
                              kPixelHeight / 4 + 20);
 
     gDrawingContext.fillStyle = "white";
-    gDrawingContext.font = "bold, 14px sans-serif";
+    gDrawingContext.font = "bold 16px sans-serif";
     gDrawingContext.fillText("Tap To Play",
                              kPixelWidth / 2,
                              kPixelHeight / 4 + 70);
