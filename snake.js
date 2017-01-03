@@ -7,6 +7,8 @@ var kLoopInterval = 125;
 var kLineColor = "#ccc";
 var kIncrement = 3;
 var kSwipeThreshold = 5;
+// allow queuing up max two directions (e.g. go up then go right immediately after one move)
+var kDirectionQueueLimit = 2;
 
 var gDrawingContext;
 var gGameController;
@@ -65,8 +67,20 @@ function Snake() {
     }
   }
   this.direction = null;
+  this.directionQueue = [];
   this.numAdd = 0;
   this.move = function() {
+    if (this.directionQueue.length > 0) {
+      var currentDir = this.direction;
+      var newDir = this.directionQueue.shift();
+      var opposite = (currentDir === LEFT && newDir === RIGHT) ||
+                     (currentDir === RIGHT && newDir === LEFT) ||
+                     (currentDir === UP && newDir === DOWN) ||
+                     (currentDir === DOWN && newDir === UP);
+      if (!opposite) {
+        this.direction = newDir;
+      }
+    }
     var xDiff = 0;
     var yDiff = 0;
     switch (this.direction) {
@@ -99,7 +113,6 @@ function Snake() {
       this.draw();
       // snake can now change directions
       document.addEventListener('touchmove', gTouchManager.touchmove);
-      document.addEventListener('keydown', gKeyManager.keydown);
     }
   }
   this.isDead = function(newHead) {
@@ -399,23 +412,18 @@ function TouchManager() {
 
 function KeyManager() {
   this.keydown = function(e) {
-    // snake must move at least once before changing direction again
-    document.removeEventListener('keydown', gKeyManager.keydown);
-
     var direction = gKeyManager.getDirection(e.keyCode);
-    gSnake.direction = direction;
+    if (direction !== null && gSnake.directionQueue.length < kDirectionQueueLimit) {
+      gSnake.directionQueue.push(direction);
+    }
   }
   this.getDirection = function(keyCode) {
-    if (keyCode === LEFT_KEYCODE && gSnake.direction !== RIGHT) {
-      return LEFT;
-    } else if (keyCode === UP_KEYCODE && gSnake.direction !== DOWN) {
-      return UP;
-    } else if (keyCode === RIGHT_KEYCODE && gSnake.direction !== LEFT) {
-      return RIGHT;
-    } else if (keyCode === DOWN_KEYCODE && gSnake.direction !== UP) {
-      return DOWN;
-    } else {
-      return gSnake.direction;
+    switch (keyCode) {
+      case LEFT_KEYCODE: return LEFT;
+      case UP_KEYCODE: return UP;
+      case RIGHT_KEYCODE: return RIGHT;
+      case DOWN_KEYCODE: return DOWN;
+      default: return null;
     }
   }
 }
