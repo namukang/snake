@@ -6,7 +6,7 @@ var kBoxSide = 20;
 var kLoopInterval = 125;
 var kLineColor = "#ccc";
 var kIncrement = 3;
-var kSwipeThreshold = 5;
+var kSwipeThreshold = 20;
 // allow queuing up max two directions (e.g. go up then go right immediately after one move)
 var kDirectionQueueLimit = 2;
 
@@ -111,8 +111,6 @@ function Snake() {
         gDisplayManager.eraseBox(tail);
       }
       this.draw();
-      // snake can now change directions
-      document.addEventListener('touchmove', gTouchManager.touchmove);
     }
   }
   this.isDead = function(newHead) {
@@ -352,9 +350,6 @@ function TouchManager() {
     }
   }
   this.touchmove = function(e) {
-    // snake must move at least once before changing direction again
-    document.removeEventListener('touchmove', gTouchManager.touchmove);
-
     var newPoint = gTouchManager.getCursorPosition(e);
     if (newPoint === null) {
       return;
@@ -370,7 +365,10 @@ function TouchManager() {
       return;
     }
 
-    gSnake.direction = gTouchManager.getDirection(xDiff, yDiff);
+    var direction = gTouchManager.getDirection(xDiff, yDiff);
+    if (gSnake.directionQueue.length < kDirectionQueueLimit) {
+      gSnake.directionQueue.push(direction);
+    }
     gTouchManager.oldPoint = newPoint;
   }
   this.getDirection = function(xDiff, yDiff) {
@@ -379,26 +377,17 @@ function TouchManager() {
 
     if (xAbsDiff > yAbsDiff) {
       if (xDiff > 0) {
-        if (gSnake.direction !== LEFT) {
-          return RIGHT;
-        }
+        return RIGHT;
       } else {
-        if (gSnake.direction !== RIGHT) {
-          return LEFT;
-        }
+        return LEFT;
       }
     } else {
       if (yDiff > 0) {
-        if (gSnake.direction !== UP) {
-          return DOWN;
-        }
+        return DOWN;
       } else {
-        if (gSnake.direction !== DOWN) {
-          return UP;
-        }
+        return UP;
       }
     }
-    return gSnake.direction;
   }
   this.getCursorPosition = function(e) {
     if (e.touches === undefined) {
