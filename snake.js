@@ -10,15 +10,14 @@ var kSwipeThreshold = 20;
 // allow queuing up max two directions (e.g. go up then go right immediately after one move)
 var kDirectionQueueLimit = 2;
 
-var kDialogWidth = 300;
-var kDialogHeight = 120;
-var kPlayButtonWidth = 200;
-var kPlayButtonHeight = 40;
-
+var gCanvasElement;
 var gDrawingContext;
 var gGameController;
 var gTouchManager;
 var gKeyManager;
+var gClickManager;
+var gDisplayManager;
+var gDialogManager;
 var gScoreboard;
 var gSnake;
 var gFood;
@@ -182,12 +181,12 @@ function GameController() {
   this.initGame = function() {
     gScoreboard = new Scoreboard();
 
-    var canvasElement = document.createElement("canvas");
-    canvasElement.id = "canvas";
-    document.body.appendChild(canvasElement);
+    gCanvasElement = document.createElement("canvas");
+    gCanvasElement.id = "canvas";
+    document.body.appendChild(gCanvasElement);
 
-    canvasElement.width = kPixelWidth;
-    canvasElement.height = kPixelHeight;
+    gCanvasElement.width = kPixelWidth;
+    gCanvasElement.height = kPixelHeight;
 
     gTouchManager = new TouchManager();
     document.addEventListener('touchstart', gTouchManager.touchstart);
@@ -196,9 +195,13 @@ function GameController() {
     gKeyManager = new KeyManager();
     document.addEventListener('keydown', gKeyManager.keydown);
 
-    gDisplayManager = new DisplayManager();
+    gClickManager = new ClickManager();
+    document.addEventListener('click', gClickManager.click);
 
-    gDrawingContext = canvasElement.getContext("2d");
+    gDisplayManager = new DisplayManager();
+    gDialogManager = new DialogManager();
+
+    gDrawingContext = gCanvasElement.getContext("2d");
 
     var self = this;
     setInterval(function() { self.update(); }, kLoopInterval);
@@ -224,42 +227,7 @@ function GameController() {
   this.endGame = function() {
     this.gameOver = true;
     var setNewTopScore = gScoreboard.submitScore();
-    this.showFinalScore(setNewTopScore);
-  }
-  this.showFinalScore = function(topScoreChanged) {
-    var midWidth = kPixelWidth / 2;
-    var midHeight = kPixelHeight / 2;
-    gDrawingContext.fillStyle = "black";
-    gDrawingContext.fillRect(midWidth - (kDialogWidth / 2),
-                             midHeight - (kDialogHeight / 2),
-                             kDialogWidth,
-                             kDialogHeight);
-
-    gDrawingContext.fillStyle = "gray";
-    gDrawingContext.fillRect(midWidth - (kPlayButtonWidth / 2),
-                             midHeight - (kPlayButtonHeight / 2) + 15,
-                             kPlayButtonWidth,
-                             kPlayButtonHeight);
-
-    gDrawingContext.fillStyle = "white";
-    gDrawingContext.textBaseline = "top";
-    gDrawingContext.textAlign = "center";
-
-    gDrawingContext.font = "bold 18px sans-serif";
-    var scoreText = "Final Score: ";
-    if (topScoreChanged) {
-      gDrawingContext.fillStyle = "red";
-      scoreText = "New Top Score: ";
-    }
-    gDrawingContext.fillText(scoreText + gScoreboard.score,
-                             midWidth,
-                             midHeight - 40);
-
-    gDrawingContext.fillStyle = "white";
-    gDrawingContext.font = "bold 16px sans-serif";
-    gDrawingContext.fillText("Play Again",
-                             midWidth,
-                             midHeight + 6);
+    gDialogManager.showFinalScore(setNewTopScore);
   }
 }
 
@@ -341,20 +309,7 @@ function TouchManager() {
 
     // listen for replay if game is over
     if (gTouchManager.oldPoint !== null && gGameController.gameOver) {
-      var midWidth = kPixelWidth / 2;
-      var midHeight = kPixelHeight / 2;
-
-      var xBoxStart = midWidth - (kPlayButtonWidth / 2);
-      var xBoxEnd = xBoxStart + kPlayButtonWidth;
-
-      var yBoxStart = midHeight - (kPlayButtonHeight / 2) + 15;
-      var yBoxEnd = yBoxStart + kPlayButtonHeight;
-
-      var inBox = (gTouchManager.oldPoint.x > xBoxStart &&
-                   gTouchManager.oldPoint.x < xBoxEnd &&
-                   gTouchManager.oldPoint.y > yBoxStart &&
-                   gTouchManager.oldPoint.y < yBoxEnd);
-      if (inBox) {
+      if (gDialogManager.inPlayButton(gTouchManager.oldPoint.x, gTouchManager.oldPoint.y)) {
         gGameController.newGame();
       }
     }
@@ -424,5 +379,88 @@ function KeyManager() {
       case DOWN_KEYCODE: return DOWN;
       default: return null;
     }
+  }
+}
+
+function ClickManager() {
+  this.click = function(e) {
+    // listen for replay if game is over
+    if (gGameController.gameOver) {
+      var x = e.clientX - gCanvasElement.offsetLeft;
+      var y = e.clientY - gCanvasElement.offsetTop;
+      if (gDialogManager.inPlayButton(x, y)) {
+        gGameController.newGame();
+      }
+    }
+  }
+}
+
+function DialogManager() {
+  this.midCanvasX = kPixelWidth / 2;
+  this.midCanvasY = kPixelHeight / 2;
+  this.dialogWidth = 300;
+  this.dialogHeight = 120;
+  this.dialogCoord = {
+    xStart: this.midCanvasX - (this.dialogWidth / 2),
+    yStart: this.midCanvasY - (this.dialogHeight / 2)
+  }
+  this.playButtonWidth = 200;
+  this.playButtonHeight = 40;
+  this.playButtonCoord = {
+    xStart: this.midCanvasX - (this.playButtonWidth / 2),
+    yStart: this.midCanvasY - (this.playButtonHeight / 2) + 15
+  }
+  this.showFinalScore = function(topScoreChanged) {
+    var scoreText;
+    var color;
+    if (topScoreChanged) {
+      scoreText = "New Top Score: ";
+      color = "red";
+    } else {
+      scoreText = "Final Score: ";
+      color = "white";
+    }
+    this.showDialog(scoreText + gScoreboard.score, color, "Play Again");
+  }
+  this.showDialog = function(mainText, mainTextColor, buttonText) {
+    gDrawingContext.fillStyle = "black";
+    gDrawingContext.fillRect(this.dialogCoord.xStart,
+                             this.dialogCoord.yStart,
+                             this.dialogWidth,
+                             this.dialogHeight);
+
+    gDrawingContext.fillStyle = "gray";
+    gDrawingContext.fillRect(this.playButtonCoord.xStart,
+                             this.playButtonCoord.yStart,
+                             this.playButtonWidth,
+                             this.playButtonHeight);
+
+    gDrawingContext.fillStyle = mainTextColor;
+    gDrawingContext.textBaseline = "top";
+    gDrawingContext.textAlign = "center";
+    gDrawingContext.font = "bold 18px sans-serif";
+    gDrawingContext.fillText(mainText,
+                             this.midCanvasX,
+                             this.midCanvasY - 40);
+
+    gDrawingContext.fillStyle = "white";
+    gDrawingContext.font = "bold 16px sans-serif";
+    gDrawingContext.fillText(buttonText,
+                             this.midCanvasX,
+                             this.midCanvasY + 6);
+  }
+
+  this.inPlayButton = function(x, y) {
+    var xBoxStart = this.playButtonCoord.xStart;
+    var xBoxEnd = xBoxStart + this.playButtonWidth;
+
+    var yBoxStart = this.playButtonCoord.yStart;
+    var yBoxEnd = yBoxStart + this.playButtonHeight;
+
+    var inBox = (x > xBoxStart &&
+                 x < xBoxEnd &&
+                 y > yBoxStart &&
+                 y < yBoxEnd);
+    return inBox;
   }
 }
