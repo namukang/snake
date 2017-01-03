@@ -1,5 +1,6 @@
 var kPixelWidth;
 var kPixelHeight;
+var kPixelThreshold = 600;
 var kScoreHeight = 40;
 var kBoxSide = 20;
 var kLoopInterval = 125;
@@ -23,6 +24,11 @@ window.onload = function() {
   // get viewport size
   kPixelWidth = document.documentElement.clientWidth;
   kPixelHeight = document.documentElement.clientHeight;
+
+  if (kPixelWidth > kPixelThreshold && kPixelHeight > kPixelThreshold) {
+    kPixelWidth = kPixelThreshold;
+    kPixelHeight = kPixelThreshold;
+  }
 
   // round to nearest box border
   kPixelWidth = Math.floor(kPixelWidth / kBoxSide) * kBoxSide;
