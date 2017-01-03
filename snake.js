@@ -206,6 +206,9 @@ function GameController() {
     var self = this;
     setInterval(function() { self.update(); }, kLoopInterval);
     this.newGame();
+
+    this.gameOver = true;
+    gDialogManager.showInstructions();
   }
   this.newGame = function() {
     gSnake = new Snake();
@@ -307,9 +310,10 @@ function TouchManager() {
   this.touchstart = function(e) {
     gTouchManager.oldPoint = gTouchManager.getCursorPosition(e);
 
-    // listen for replay if game is over
-    if (gTouchManager.oldPoint !== null && gGameController.gameOver) {
-      if (gDialogManager.inPlayButton(gTouchManager.oldPoint.x, gTouchManager.oldPoint.y)) {
+    if (gGameController.gameOver) {
+      var x = gTouchManager.oldPoint.x;
+      var y = gTouchManager.oldPoint.y;
+      if (gDialogManager.inPlayButton(x, y)) {
         gGameController.newGame();
       }
     }
@@ -384,7 +388,6 @@ function KeyManager() {
 
 function ClickManager() {
   this.click = function(e) {
-    // listen for replay if game is over
     if (gGameController.gameOver) {
       var x = e.clientX - gCanvasElement.offsetLeft;
       var y = e.clientY - gCanvasElement.offsetTop;
@@ -409,6 +412,12 @@ function DialogManager() {
   this.playButtonCoord = {
     xStart: this.midCanvasX - (this.playButtonWidth / 2),
     yStart: this.midCanvasY - (this.playButtonHeight / 2) + 15
+  }
+  this.showInstructions = function() {
+    var mainText = "Swipe or use arrow keys to turn";
+    var mainTextColor = "white";
+    var buttonText = "Play";
+    this.showDialog(mainText, mainTextColor, buttonText);
   }
   this.showFinalScore = function(topScoreChanged) {
     var scoreText;
