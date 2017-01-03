@@ -11,9 +11,15 @@ var kSwipeThreshold = 5;
 var gDrawingContext;
 var gGameController;
 var gTouchManager;
+var gKeyManager;
 var gScoreboard;
 var gSnake;
 var gFood;
+
+var LEFT_KEYCODE = 37;
+var UP_KEYCODE = 38;
+var RIGHT_KEYCODE = 39;
+var DOWN_KEYCODE = 40;
 
 var UP = 0;
 var RIGHT = 1;
@@ -93,6 +99,7 @@ function Snake() {
       this.draw();
       // snake can now change directions
       document.addEventListener('touchmove', gTouchManager.touchmove);
+      document.addEventListener('keydown', gKeyManager.keydown);
     }
   }
   this.isDead = function(newHead) {
@@ -169,6 +176,9 @@ function GameController() {
     gTouchManager = new TouchManager();
     document.addEventListener('touchstart', gTouchManager.touchstart);
     document.addEventListener('touchmove', gTouchManager.touchmove);
+
+    gKeyManager = new KeyManager();
+    document.addEventListener('keydown', gKeyManager.keydown);
 
     gDisplayManager = new DisplayManager();
 
@@ -384,5 +394,28 @@ function TouchManager() {
     var x = e.touches[0].pageX;
     var y = e.touches[0].pageY;
     return new Point(x, y);
+  }
+}
+
+function KeyManager() {
+  this.keydown = function(e) {
+    // snake must move at least once before changing direction again
+    document.removeEventListener('keydown', gKeyManager.keydown);
+
+    var direction = gKeyManager.getDirection(e.keyCode);
+    gSnake.direction = direction;
+  }
+  this.getDirection = function(keyCode) {
+    if (keyCode === LEFT_KEYCODE && gSnake.direction !== RIGHT) {
+      return LEFT;
+    } else if (keyCode === UP_KEYCODE && gSnake.direction !== DOWN) {
+      return UP;
+    } else if (keyCode === RIGHT_KEYCODE && gSnake.direction !== LEFT) {
+      return RIGHT;
+    } else if (keyCode === DOWN_KEYCODE && gSnake.direction !== UP) {
+      return DOWN;
+    } else {
+      return gSnake.direction;
+    }
   }
 }
